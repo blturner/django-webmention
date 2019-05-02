@@ -1,0 +1,11 @@
+<article class="{{ webmention.type }}">
+  <h1><a class="{{ webmention.author.type }}" href="{{ webmention.author.url }}">{{ webmention.author.name }}</a></h1>
+
+  <div class="e-content">
+    {{ webmention.summary|linebreaks }}
+
+    {{ webmention.content|safe }}
+  </div>
+
+  <footer>{{ webmention.published }}</footer>
+</article>
