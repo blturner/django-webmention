@@ -57,15 +57,19 @@ class WebMentionResponse(models.Model):
         webmention["name"] = item_props["name"]
 
         author = item_props["author"][0]
+        author_props = author.get("properties")
 
-        webmention["author"] = {
-            "type": author["type"][0],
-            "name": author["properties"]["name"][0],
-            "url": author["properties"]["url"][0],
-        }
+        webmention["author"] = {"type": author.get("type")[-1]}
 
-        webmention["summary"] = item_props["summary"][0]
-        webmention["published"] = parse(item_props["published"][0])
-        webmention["content"] = item_props["content"][0]["html"]
+        for key in author_props.keys():
+            webmention["author"][key] = author_props.get(key)[-1]
+
+        for key in item_props.keys():
+            value = item_props.get(key)[-1]
+            if key == "published":
+                value = parse(value)
+            if key == "content":
+                value = value["html"]
+            webmention[key] = value
 
         return webmention
