@@ -1,11 +1,11 @@
 import mf2py
+import requests
 
 from dateutil.parser import parse
 
 from django.db import models
 
 
-# make rendering a method instead of template tag
 class WebMentionResponse(models.Model):
     response_body = models.TextField()
     response_to = models.URLField()
@@ -73,3 +73,11 @@ class WebMentionResponse(models.Model):
             webmention[key] = value
 
         return webmention
+
+
+class SentWebMention(models.Model):
+    response = models.TextField()
+    status_code = models.CharField(max_length=3)
+    source = models.URLField()
+    target = models.URLField()
+    created = models.DateTimeField(auto_now_add=True)
