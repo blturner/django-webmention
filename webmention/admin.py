@@ -7,6 +7,7 @@ class WebMentionResponseAdmin(admin.ModelAdmin):
     model = WebMentionResponse
 
     fields = [
+        "status_key",
         ("source_for_admin", "response_to_for_admin"),
         "response_body",
         ("date_created", "date_modified"),
@@ -20,10 +21,11 @@ class WebMentionResponseAdmin(admin.ModelAdmin):
         "date_created",
         "date_modified",
         "current",
+        "status_key",
     ]
 
     list_display = [
-        "pk",
+        "status_key",
         "source_for_admin",
         "response_to_for_admin",
         "date_created",

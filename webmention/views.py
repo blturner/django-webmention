@@ -6,7 +6,7 @@ from django.http import (
     HttpResponse,
 )
 from django.template.response import SimpleTemplateResponse
-from django.views.generic import CreateView
+from django.views.generic import CreateView, DetailView
 
 from .models import WebMentionResponse, SentWebMention
 from .forms import SentWebMentionForm, WebMentionForm
@@ -76,6 +76,13 @@ class WebmentionCreateView(CreateView):
         kwargs = super().get_form_kwargs()
         kwargs.update({"request": self.request})
         return kwargs
+
+
+class WebmentionStatus(DetailView):
+    model = WebMentionResponse
+    slug_field = "status_key"
+    slug_url_kwarg = "status_key"
+    template_name = "webmention/webmention_status.html"
 
 
 class SendWebMentionView(CreateView):

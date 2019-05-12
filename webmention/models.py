@@ -1,9 +1,11 @@
 import mf2py
 import requests
+import uuid
 
 from dateutil.parser import parse
 
 from django.db import models
+from django.urls import resolve, reverse
 
 
 class WebMentionResponse(models.Model):
@@ -14,6 +16,7 @@ class WebMentionResponse(models.Model):
     current = models.BooleanField(default=True)
     date_created = models.DateTimeField(auto_now_add=True)
     date_modified = models.DateTimeField(auto_now=True)
+    status_key = models.CharField(max_length=6)
 
     class Meta:
         verbose_name = "webmention"
@@ -21,6 +24,16 @@ class WebMentionResponse(models.Model):
 
     def __str__(self):
         return self.source
+
+    def get_absolute_url(self):
+        return reverse(
+            "webmention:status", kwargs={"status_key": self.status_key}
+        )
+
+    def save(self, *args, **kwargs):
+        if not self.status_key:
+            self.status_key = uuid.uuid4().hex[:6].upper()
+        super().save(*args, **kwargs)
 
     def source_for_admin(self):
         return '<a href="{href}">{href}</a>'.format(href=self.source)
