@@ -16,7 +16,7 @@ class WebMentionResponse(models.Model):
     current = models.BooleanField(default=True)
     date_created = models.DateTimeField(auto_now_add=True)
     date_modified = models.DateTimeField(auto_now=True)
-    status_key = models.CharField(max_length=6)
+    status_key = models.CharField(max_length=6, unique=True)
 
     class Meta:
         verbose_name = "webmention"
