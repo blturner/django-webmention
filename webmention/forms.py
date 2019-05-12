@@ -27,12 +27,16 @@ class WebMentionForm(forms.ModelForm):
         target = cleaned_data.get("response_to")
 
         if source and target:
+            if source == target:
+                raise forms.ValidationError(
+                    "source and target cannot be the same"
+                )
             url = self.request.build_absolute_uri(
                 reverse("webmention:receive")
             )
             resp = requests.post(url, {"source": source, "target": target})
 
-            if resp.status_code != 202:
+            if resp.status_code != 200:
                 raise forms.ValidationError(resp.content.decode("utf-8"))
 
 
