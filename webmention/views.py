@@ -5,10 +5,11 @@ from django.http import (
     HttpResponseServerError,
     HttpResponse,
 )
+from django.template.response import SimpleTemplateResponse
 from django.views.generic import CreateView
 
 from .models import WebMentionResponse, SentWebMention
-from .forms import SentWebMentionForm
+from .forms import SentWebMentionForm, WebMentionForm
 from .resolution import (
     url_resolves,
     fetch_and_validate_source,
@@ -52,6 +53,29 @@ def receive(request):
         return HttpResponseBadRequest(
             "webmention source and/or target not in request"
         )
+
+
+class WebmentionCreateView(CreateView):
+    model = WebMentionResponse
+    form_class = WebMentionForm
+    template_name = "webmention/webmention_form.html"
+
+    def form_valid(self, form):
+        """
+        Form is saved in receive view.
+        """
+        context = {"response_to": form.cleaned_data.get("response_to")}
+        return SimpleTemplateResponse(
+            "webmention/webmention_success.html", context
+        )
+
+    def get_form_kwargs(self):
+        """
+        Sets the request on the form in order to use request.build_absolute_uri.
+        """
+        kwargs = super().get_form_kwargs()
+        kwargs.update({"request": self.request})
+        return kwargs
 
 
 class SendWebMentionView(CreateView):
