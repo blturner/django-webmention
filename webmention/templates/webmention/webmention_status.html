@@ -1,0 +1,13 @@
+<h1>Webmention status: {{ object.status_key }}</h1>
+<h2>Status: {{ object.reviewed|yesno:"Reviewed,Not Reviewed"}}</h2>
+
+<dl>
+  <dt>Created</dt>
+  <dd>{{ object.date_created }}</dd>
+  <dt>Target</dt>
+  <dd><a href="{{ object.response_to }}">{{ object.response_to }}</a></dd>
+  <dt>Source</dt>
+  <dd><a href="{{ object.source }}">{{ object.source }}</a></dd>
+</dl>
+
+{{ object.get_target }}

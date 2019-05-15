@@ -1,0 +1,5 @@
+<ul>
+  {% for webmention in webmentions %}
+  <li>{% include "webmention/render_webmention.html" %}</li>
+  {% endfor %}
+</ul>
