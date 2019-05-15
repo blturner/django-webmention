@@ -5,10 +5,9 @@ from django.http import (
     HttpResponseServerError,
     HttpResponse,
 )
-from django.template.response import SimpleTemplateResponse
 from django.views.generic import CreateView, DetailView
 
-from .models import WebMentionResponse, SentWebMention
+from .models import WebMentionResponse
 from .forms import SentWebMentionForm, WebMentionForm
 from .resolution import (
     url_resolves,
@@ -26,7 +25,7 @@ def receive(request):
         target = request.POST.get("target")
         webmention = None
 
-        if not url_resolves(target):
+        if not url_resolves(target, request=request):
             return HttpResponseBadRequest(
                 "Target URL did not resolve to a resource on the server"
             )
@@ -41,9 +40,7 @@ def receive(request):
 
             response_body = fetch_and_validate_source(source, target)
             webmention.update(source, target, response_body)
-            return HttpResponse(
-                "The webmention was successfully received", status=202
-            )
+            return HttpResponse("The webmention was successfully received")
         except (SourceFetchError, TargetNotFoundError) as e:
             webmention.invalidate()
             return HttpResponseBadRequest(str(e))
@@ -59,15 +56,6 @@ class WebmentionCreateView(CreateView):
     model = WebMentionResponse
     form_class = WebMentionForm
     template_name = "webmention/webmention_form.html"
-
-    def form_valid(self, form):
-        """
-        Form is saved in receive view.
-        """
-        context = {"response_to": form.cleaned_data.get("response_to")}
-        return SimpleTemplateResponse(
-            "webmention/webmention_success.html", context
-        )
 
     def get_form_kwargs(self):
         """
@@ -86,5 +74,6 @@ class WebmentionStatus(DetailView):
 
 
 class SendWebMentionView(CreateView):
-    model = SentWebMention
+    model = WebMentionResponse
     form_class = SentWebMentionForm
+    template_name = "webmention/sentwebmention_form.html"

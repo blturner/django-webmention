@@ -1,0 +1,3 @@
+{% for webmention in webmentions %}
+  <li><a href="{{ webmention.get_absolute_url }}">{{ webmention.status_code }} {{ webmention.response_to }} {{ webmention.date_created }}</a></li>
+{% endfor %}

@@ -7,7 +7,7 @@ from django.urls import reverse
 
 from bs4 import BeautifulSoup
 
-from .models import WebMentionResponse, SentWebMention
+from .models import WebMentionResponse
 
 
 class WebMentionForm(forms.ModelForm):
@@ -42,11 +42,11 @@ class WebMentionForm(forms.ModelForm):
 
 class SentWebMentionForm(forms.ModelForm):
     class Meta:
-        model = SentWebMention
-        fields = ("source", "target")
+        model = WebMentionResponse
+        fields = ("source", "response_to")
 
-    def clean_target(self):
-        target = self.cleaned_data["target"]
+    def clean_response_to(self):
+        target = self.cleaned_data["response_to"]
         endpoint = None
 
         resp = requests.head(url=target)
@@ -93,11 +93,11 @@ class SentWebMentionForm(forms.ModelForm):
 
         resp = requests.post(
             self.endpoint,
-            {"target": instance.target, "source": instance.source},
+            {"response_to": instance.response_to, "source": instance.source},
         )
 
         instance.status_code = resp.status_code
-        instance.response = resp.content.decode("utf-8")
+        instance.response_body = resp.content.decode("utf-8")
 
         if commit:
             instance.save()

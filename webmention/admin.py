@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import WebMentionResponse, SentWebMention
+from .models import WebMentionResponse
 
 
 class WebMentionResponseAdmin(admin.ModelAdmin):
@@ -28,6 +28,7 @@ class WebMentionResponseAdmin(admin.ModelAdmin):
         "status_key",
         "source_for_admin",
         "response_to_for_admin",
+        "status_code",
         "date_created",
         "date_modified",
         "reviewed",
@@ -41,10 +42,4 @@ class WebMentionResponseAdmin(admin.ModelAdmin):
     date_hierarchy = "date_modified"
 
 
-class SentWebMentionAdmin(admin.ModelAdmin):
-    model = SentWebMention
-    list_display = ["target", "source", "status_code", "created"]
-
-
-admin.site.register(SentWebMention, SentWebMentionAdmin)
 admin.site.register(WebMentionResponse, WebMentionResponseAdmin)

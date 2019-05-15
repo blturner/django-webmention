@@ -5,7 +5,7 @@ import uuid
 from dateutil.parser import parse
 
 from django.db import models
-from django.urls import resolve, reverse
+from django.urls import reverse
 
 
 class WebMentionResponse(models.Model):
@@ -17,6 +17,7 @@ class WebMentionResponse(models.Model):
     date_created = models.DateTimeField(auto_now_add=True)
     date_modified = models.DateTimeField(auto_now=True)
     status_key = models.CharField(max_length=6, unique=True)
+    status_code = models.CharField(max_length=3)
 
     class Meta:
         verbose_name = "webmention"
@@ -63,34 +64,31 @@ class WebMentionResponse(models.Model):
         data = mf2py.parse(doc=self.response_body)
         webmention = {}
 
-        item = data["items"][0]
-        item_props = item["properties"]
+        items = data.get("items")
 
-        webmention["type"] = item["type"][0]
-        webmention["name"] = item_props["name"]
+        if len(items) > 0:
+            item = items[0]
+            item_props = item.get("properties")
 
-        author = item_props["author"][0]
-        author_props = author.get("properties")
+            webmention["type"] = item["type"][0]
+            webmention["name"] = item_props["name"]
 
-        webmention["author"] = {"type": author.get("type")[-1]}
+            author = item_props["author"][0]
+            author_props = author.get("properties")
 
-        for key in author_props.keys():
-            webmention["author"][key] = author_props.get(key)[-1]
+            webmention["author"] = {"type": author.get("type")[-1]}
 
-        for key in item_props.keys():
-            value = item_props.get(key)[-1]
-            if key == "published":
-                value = parse(value)
-            if key == "content":
-                value = value["html"]
-            webmention[key] = value
+            for key in author_props.keys():
+                webmention["author"][key] = author_props.get(key)[-1]
+
+            for key in item_props.keys():
+                value = item_props.get(key)[-1]
+                if key == "published":
+                    value = parse(value)
+                if key == "content":
+                    value = value["html"]
+                webmention[key] = value
 
         return webmention
 
 
-class SentWebMention(models.Model):
-    response = models.TextField()
-    status_code = models.CharField(max_length=3)
-    source = models.URLField()
-    target = models.URLField()
-    created = models.DateTimeField(auto_now_add=True)
