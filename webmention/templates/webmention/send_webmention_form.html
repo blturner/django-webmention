@@ -1,4 +1,6 @@
 <h1>Send a webmention</h1>
+
+{% for form in forms %}
 <form method="post" action="{% url 'webmention:send' %}">
   {% csrf_token %}
   
@@ -6,3 +8,4 @@
 
   <p><button type="submit">Submit</button></p>
 </form>
+{% endfor %}

@@ -1,3 +1,5 @@
+import mf2py
+
 from django import template
 from django import forms
 
@@ -25,14 +27,18 @@ def webmention_form(context, obj):
 )
 def send_webmention_form(context, obj):
     request = context["request"]
-    source = obj.get_absolute_url()
+    source = request.build_absolute_uri(obj.get_absolute_url())
+    mf2data = mf2py.parse(doc=obj.content)
+    send_forms = []
 
-    data = {"source": request.build_absolute_uri(source)}
+    for target in mf2data["rels"]["webmention"]:
+        data = {"source": source, "response_to": target}
+        form = SentWebMentionForm(initial=data)
+        form.fields["source"] = forms.URLField(widget=forms.HiddenInput)
 
-    form = SentWebMentionForm(initial=data)
-    form.fields["source"] = forms.URLField(widget=forms.HiddenInput)
+        send_forms.append(form)
 
-    context["form"] = form
+    context["forms"] = send_forms
 
     return context
 
