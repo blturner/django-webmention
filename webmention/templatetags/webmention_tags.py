@@ -25,13 +25,18 @@ def webmention_form(context, obj):
 @register.inclusion_tag(
     "webmention/send_webmention_form.html", takes_context=True
 )
-def send_webmention_form(context, obj):
+def send_webmention_form(context, absolute_url, content):
     request = context["request"]
-    source = request.build_absolute_uri(obj.get_absolute_url())
-    mf2data = mf2py.parse(doc=obj.content)
+    source = request.build_absolute_uri(absolute_url)
+    mf2data = mf2py.parse(doc=content)
     send_forms = []
 
-    for target in mf2data["rels"]["webmention"]:
+    try:
+        targets = mf2data["rels"]["webmention"]
+    except KeyError:
+        targets = []
+
+    for target in targets:
         data = {"source": source, "response_to": target}
         form = SentWebMentionForm(initial=data)
         form.fields["source"] = forms.URLField(widget=forms.HiddenInput)
