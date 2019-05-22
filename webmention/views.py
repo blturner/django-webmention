@@ -68,8 +68,7 @@ class WebmentionCreateView(CreateView):
 
 class WebmentionStatus(DetailView):
     model = WebMentionResponse
-    slug_field = "status_key"
-    slug_url_kwarg = "status_key"
+    pk_url_kwarg = "uuid"
     template_name = "webmention/webmention_status.html"
 
 

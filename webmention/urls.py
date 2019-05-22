@@ -11,8 +11,6 @@ urlpatterns = [
     url(r"^send/$", views.SendWebMentionView.as_view(), name="send"),
     url(r"^submit/$", views.WebmentionCreateView.as_view(), name="submit"),
     url(
-        r"^(?P<status_key>[-\w]+)/$",
-        views.WebmentionStatus.as_view(),
-        name="status",
+        r"^(?P<uuid>[-\w]+)/$", views.WebmentionStatus.as_view(), name="status"
     ),
 ]

@@ -9,6 +9,9 @@ from django.urls import reverse
 
 
 class WebMentionResponse(models.Model):
+    id = models.UUIDField(
+        primary_key=True, default=uuid.uuid4, editable=False, max_length=6
+    )
     response_body = models.TextField()
     response_to = models.URLField()
     source = models.URLField()
@@ -16,7 +19,6 @@ class WebMentionResponse(models.Model):
     current = models.BooleanField(default=True)
     date_created = models.DateTimeField(auto_now_add=True)
     date_modified = models.DateTimeField(auto_now=True)
-    status_key = models.CharField(max_length=6, unique=True)
     status_code = models.CharField(max_length=3)
 
     class Meta:
@@ -30,11 +32,6 @@ class WebMentionResponse(models.Model):
         return reverse(
             "webmention:status", kwargs={"status_key": self.status_key}
         )
-
-    def save(self, *args, **kwargs):
-        if not self.status_key:
-            self.status_key = uuid.uuid4().hex[:6].upper()
-        super().save(*args, **kwargs)
 
     def source_for_admin(self):
         return '<a href="{href}">{href}</a>'.format(href=self.source)
