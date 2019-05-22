@@ -12,7 +12,7 @@ class SentWebMentionFormTestCase(TestCase):
         target = "https://webmention-target.com/webmention"
         source = "https://webmention-source.com/content"
 
-        data = {"target": target, "source": source}
+        data = {"response_to": target, "source": source}
 
         self.target = target
         self.form = form_class(data)
@@ -39,7 +39,7 @@ class SentWebMentionFormTestCase(TestCase):
 
         saved = self.form.save()
 
-        self.assertEqual(saved.response, "you did it")
+        self.assertEqual(saved.response_body, "you did it")
 
     @httpretty.activate
     def test_link_header_absolute_url(self):
@@ -63,7 +63,7 @@ class SentWebMentionFormTestCase(TestCase):
 
         saved = self.form.save()
 
-        self.assertEqual(saved.response, "you did it")
+        self.assertEqual(saved.response_body, "you did it")
 
     @httpretty.activate
     def test_link_tag_relative(self):
@@ -86,7 +86,7 @@ class SentWebMentionFormTestCase(TestCase):
 
         saved = self.form.save()
 
-        self.assertEqual(saved.response, "you did it")
+        self.assertEqual(saved.response_body, "you did it")
 
     @httpretty.activate
     def test_link_tag_absolute(self):
@@ -109,7 +109,7 @@ class SentWebMentionFormTestCase(TestCase):
 
         saved = self.form.save()
 
-        self.assertEqual(saved.response, "you did it")
+        self.assertEqual(saved.response_body, "you did it")
 
     @httpretty.activate
     def test_anchor_tag_relative(self):
@@ -132,7 +132,7 @@ class SentWebMentionFormTestCase(TestCase):
 
         saved = self.form.save()
 
-        self.assertEqual(saved.response, "you did it")
+        self.assertEqual(saved.response_body, "you did it")
 
     @httpretty.activate
     def test_anchor_tag_absolute(self):
@@ -155,7 +155,7 @@ class SentWebMentionFormTestCase(TestCase):
 
         saved = self.form.save()
 
-        self.assertEqual(saved.response, "you did it")
+        self.assertEqual(saved.response_body, "you did it")
 
     @httpretty.activate
     def test_link_header_case_insensitive(self):
@@ -179,7 +179,7 @@ class SentWebMentionFormTestCase(TestCase):
 
         saved = self.form.save()
 
-        self.assertEqual(saved.response, "you did it")
+        self.assertEqual(saved.response_body, "you did it")
 
     @httpretty.activate
     def test_link_header_no_quotes(self):
@@ -201,7 +201,7 @@ class SentWebMentionFormTestCase(TestCase):
 
         saved = self.form.save()
 
-        self.assertEqual(saved.response, "you did it")
+        self.assertEqual(saved.response_body, "you did it")
 
     @httpretty.activate
     def test_link_tag_multiple_rel(self):
@@ -224,7 +224,7 @@ class SentWebMentionFormTestCase(TestCase):
 
         saved = self.form.save()
 
-        self.assertEqual(saved.response, "you did it")
+        self.assertEqual(saved.response_body, "you did it")
 
     @httpretty.activate
     def test_link_header_multiple_rel(self):
@@ -248,7 +248,7 @@ class SentWebMentionFormTestCase(TestCase):
 
         saved = self.form.save()
 
-        self.assertEqual(saved.response, "you did it")
+        self.assertEqual(saved.response_body, "you did it")
 
     @httpretty.activate
     def test_link_header_first(self):
@@ -280,7 +280,7 @@ class SentWebMentionFormTestCase(TestCase):
 
         saved = self.form.save()
 
-        self.assertEqual(saved.response, "you did it")
+        self.assertEqual(saved.response_body, "you did it")
 
     @httpretty.activate
     def test_naive_link_tag_rel_matching(self):
@@ -303,7 +303,7 @@ class SentWebMentionFormTestCase(TestCase):
 
         saved = self.form.save()
 
-        self.assertEqual(saved.response, "you did it")
+        self.assertEqual(saved.response_body, "you did it")
 
     @httpretty.activate
     def test_ignore_html_comment(self):
@@ -326,7 +326,7 @@ class SentWebMentionFormTestCase(TestCase):
 
         saved = self.form.save()
 
-        self.assertEqual(saved.response, "you did it")
+        self.assertEqual(saved.response_body, "you did it")
 
     @httpretty.activate
     def test_ignore_escaped_html(self):
@@ -349,7 +349,7 @@ class SentWebMentionFormTestCase(TestCase):
 
         saved = self.form.save()
 
-        self.assertEqual(saved.response, "you did it")
+        self.assertEqual(saved.response_body, "you did it")
 
     @httpretty.activate
     def test_empty_link_tag(self):
@@ -372,7 +372,7 @@ class SentWebMentionFormTestCase(TestCase):
 
         saved = self.form.save()
 
-        self.assertEqual(saved.response, "you did it")
+        self.assertEqual(saved.response_body, "you did it")
 
     @httpretty.activate
     def test_document_order_anchor_before_link(self):
@@ -395,7 +395,7 @@ class SentWebMentionFormTestCase(TestCase):
 
         saved = self.form.save()
 
-        self.assertEqual(saved.response, "you did it")
+        self.assertEqual(saved.response_body, "you did it")
 
     @httpretty.activate
     def test_document_order_link_before_anchor(self):
@@ -418,7 +418,7 @@ class SentWebMentionFormTestCase(TestCase):
 
         saved = self.form.save()
 
-        self.assertEqual(saved.response, "you did it")
+        self.assertEqual(saved.response_body, "you did it")
 
     @httpretty.activate
     def test_multiple_link_headers(self):
@@ -443,7 +443,7 @@ class SentWebMentionFormTestCase(TestCase):
 
         saved = self.form.save()
 
-        self.assertEqual(saved.response, "you did it")
+        self.assertEqual(saved.response_body, "you did it")
 
     @httpretty.activate
     def test_link_header_multiple_values(self):
@@ -467,7 +467,7 @@ class SentWebMentionFormTestCase(TestCase):
 
         saved = self.form.save()
 
-        self.assertEqual(saved.response, "you did it")
+        self.assertEqual(saved.response_body, "you did it")
 
     @httpretty.activate
     def test_link_tag_no_href(self):
@@ -490,7 +490,7 @@ class SentWebMentionFormTestCase(TestCase):
 
         saved = self.form.save()
 
-        self.assertEqual(saved.response, "you did it")
+        self.assertEqual(saved.response_body, "you did it")
 
     @httpretty.activate
     def test_preserve_query_string(self):
@@ -513,7 +513,7 @@ class SentWebMentionFormTestCase(TestCase):
 
         saved = self.form.save()
 
-        self.assertEqual(saved.response, "you did it")
+        self.assertEqual(saved.response_body, "you did it")
 
     @httpretty.activate
     def test_relative_to_page(self):
@@ -536,7 +536,7 @@ class SentWebMentionFormTestCase(TestCase):
 
         saved = self.form.save()
 
-        self.assertEqual(saved.response, "you did it")
+        self.assertEqual(saved.response_body, "you did it")
 
     @httpretty.activate
     def test_follows_redirects(self):
@@ -562,4 +562,4 @@ class SentWebMentionFormTestCase(TestCase):
 
         saved = self.form.save()
 
-        self.assertEqual(saved.response, "you did it")
+        self.assertEqual(saved.response_body, "you did it")
