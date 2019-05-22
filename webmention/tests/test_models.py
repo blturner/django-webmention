@@ -7,29 +7,47 @@ from webmention.models import WebMentionResponse
 
 class WebMentionResponseTestCase(TestCase):
     def setUp(self):
-        self.source = 'http://example.com'
-        self.target = 'http://mysite.com'
-        self.response_body = 'foo'
+        self.source = "http://example.com"
+        self.target = "http://mysite.com"
+        self.response_body = "foo"
 
     def test_str(self):
-        webmention = WebMentionResponse.objects.create(source=self.source, response_to=self.target, response_body=self.response_body)
+        webmention = WebMentionResponse.objects.create(
+            source=self.source,
+            response_to=self.target,
+            response_body=self.response_body,
+        )
         webmention.save()
 
         self.assertEqual(webmention.source, str(webmention))
 
     def test_source_for_admin(self):
-        webmention = WebMentionResponse.objects.create(source=self.source, response_to=self.target, response_body=self.response_body)
+        webmention = WebMentionResponse.objects.create(
+            source=self.source,
+            response_to=self.target,
+            response_body=self.response_body,
+        )
         webmention.save()
 
-        self.assertEqual('<a href="{href}">{href}</a>'.format(href=webmention.source), webmention.source_for_admin())
+        self.assertEqual(
+            '<a href="{href}">{href}</a>'.format(href=webmention.source),
+            webmention.source_for_admin(),
+        )
 
     def test_response_to_for_admin(self):
-        webmention = WebMentionResponse.objects.create(source=self.source, response_to=self.target, response_body=self.response_body)
+        webmention = WebMentionResponse.objects.create(
+            source=self.source,
+            response_to=self.target,
+            response_body=self.response_body,
+        )
         webmention.save()
 
-        self.assertEqual('<a href="{href}">{href}</a>'.format(href=webmention.response_to), webmention.response_to_for_admin())
+        self.assertEqual(
+            '<a href="{href}">{href}</a>'.format(href=webmention.response_to),
+            webmention.response_to_for_admin(),
+        )
 
-    @patch('webmention.models.WebMentionResponse.save')
+    @patch("webmention.models.WebMentionResponse.save")
     def test_invalidate_when_not_previously_saved(self, mock_save):
         webmention = WebMentionResponse()
         webmention.invalidate()
@@ -37,15 +55,21 @@ class WebMentionResponseTestCase(TestCase):
         self.assertFalse(mock_save.called)
 
     def test_invalidate_when_previously_saved(self):
-        webmention = WebMentionResponse.objects.create(source=self.source, response_to=self.target, response_body=self.response_body)
+        webmention = WebMentionResponse.objects.create(
+            source=self.source,
+            response_to=self.target,
+            response_body=self.response_body,
+        )
         webmention.save()
         webmention.invalidate()
 
         self.assertFalse(webmention.current)
 
-    @patch('webmention.models.WebMentionResponse.save')
+    @patch("webmention.models.WebMentionResponse.save")
     def test_update_when_previously_invalid(self, mock_save):
-        webmention = WebMentionResponse.objects.create(source='foo', response_to='bar', response_body='baz', current=False)
+        webmention = WebMentionResponse.objects.create(
+            source="foo", response_to="bar", response_body="baz", current=False
+        )
         self.assertEqual(1, mock_save.call_count)
         webmention.update(self.source, self.target, self.response_body)
 

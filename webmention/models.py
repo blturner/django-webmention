@@ -46,7 +46,7 @@ class WebMentionResponse(models.Model):
     response_to_for_admin.short_description = "response to"
 
     def invalidate(self):
-        if self.id:
+        if self.date_created:
             self.current = False
             self.save()
 
