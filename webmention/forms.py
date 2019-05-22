@@ -93,7 +93,7 @@ class SentWebMentionForm(forms.ModelForm):
 
         resp = requests.post(
             self.endpoint,
-            {"response_to": instance.response_to, "source": instance.source},
+            {"target": instance.response_to, "source": instance.source},
         )
 
         instance.status_code = resp.status_code

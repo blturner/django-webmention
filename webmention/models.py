@@ -29,9 +29,7 @@ class WebMentionResponse(models.Model):
         return self.source
 
     def get_absolute_url(self):
-        return reverse(
-            "webmention:status", kwargs={"status_key": self.status_key}
-        )
+        return reverse("webmention:status", kwargs={"uuid": self.id})
 
     def source_for_admin(self):
         return '<a href="{href}">{href}</a>'.format(href=self.source)
