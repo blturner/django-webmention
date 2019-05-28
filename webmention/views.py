@@ -42,8 +42,8 @@ def receive(request):
             except WebMentionResponse.DoesNotExist:
                 webmention = WebMentionResponse()
 
-            response_body = fetch_and_validate_source(source, target)
-            webmention.update(source, target, response_body)
+            response = fetch_and_validate_source(source, target)
+            webmention.update(source, target, response)
             return HttpResponse("The webmention was successfully received")
         except (SourceFetchError, TargetNotFoundError) as e:
             webmention.invalidate()

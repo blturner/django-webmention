@@ -27,7 +27,7 @@ def fetch_and_validate_source(source, target):
     response = requests.get(source)
     if response.status_code == 200:
         if target in str(response.content):
-            return response.content
+            return response
         else:
             raise TargetNotFoundError("Source URL did not contain target URL")
     else:
