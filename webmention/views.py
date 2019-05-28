@@ -4,11 +4,15 @@ from django.http import (
     HttpResponseBadRequest,
     HttpResponseServerError,
     HttpResponse,
+    HttpResponseRedirect,
 )
 from django.views.generic import CreateView, DetailView
+from django.forms import modelformset_factory
+from django.shortcuts import render
+from django.urls import reverse
 
 from .models import WebMentionResponse
-from .forms import SentWebMentionForm, WebMentionForm
+from .forms import WebMentionForm, ProcessWebMentionResponseForm
 from .resolution import (
     url_resolves,
     fetch_and_validate_source,
@@ -52,6 +56,32 @@ def receive(request):
         )
 
 
+def process_webmentions(request):
+    redirect_to = request.META.get("HTTP_REFERER")
+    WebMentionResponseFormSet = modelformset_factory(
+        WebMentionResponse, form=ProcessWebMentionResponseForm
+    )
+
+    if request.method == "POST":
+        formset = WebMentionResponseFormSet(request.POST)
+
+        if formset.is_valid():
+            instances = formset.save()
+
+            if not instances:
+                instances = [form.instance for form in formset.forms]
+
+            for instance in instances:
+                instance.send_webmention()
+
+    return HttpResponseRedirect(redirect_to)
+
+    # formset = WebMentionResponseFormSet()
+    # return render(
+    #     request, "webmention/process_webmentions.html", {"formset": formset}
+    # )
+
+
 class WebmentionCreateView(CreateView):
     model = WebMentionResponse
     form_class = WebMentionForm
@@ -65,14 +95,16 @@ class WebmentionCreateView(CreateView):
         kwargs.update({"request": self.request})
         return kwargs
 
+    def post(self, request, *args, **kwargs):
+        self.object = self.model.objects.get(
+            source=request.POST.get("source"),
+            response_to=request.POST.get("response_to"),
+        )
+
+        return super().post(request, *args, **kwargs)
+
 
 class WebmentionStatus(DetailView):
     model = WebMentionResponse
     pk_url_kwarg = "uuid"
     template_name = "webmention/webmention_status.html"
-
-
-class SendWebMentionView(CreateView):
-    model = WebMentionResponse
-    form_class = SentWebMentionForm
-    template_name = "webmention/sentwebmention_form.html"

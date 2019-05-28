@@ -1,13 +1,16 @@
-{% if forms %}
-<h1>Send a webmention</h1>
+{% if formset %}
+<h1>Send webmentions</h1>
+<p>Found {{ webmentions|length }} webmentions on this page:</p>
+<ul>
+{% for webmention in webmentions %}
+  <li>{{ webmention.target }}: {% if webmention.webmention %}{{ webmention.webmention.date_modified }}{% else %}Never sent{% endif %}</li>
+{% endfor %}
+</ul>
 
-{% for form in forms %}
 <form method="post" action="{% url 'webmention:send' %}">
   {% csrf_token %}
-  
-  {{ form.as_p }}
-
+  {{ formset.as_p }}
   <p><button type="submit">Submit</button></p>
 </form>
-{% endfor %}
+
 {% endif %}

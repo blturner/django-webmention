@@ -40,6 +40,12 @@ class WebMentionForm(forms.ModelForm):
                 raise forms.ValidationError(resp.content.decode("utf-8"))
 
 
+class ProcessWebMentionResponseForm(forms.ModelForm):
+    class Meta:
+        model = WebMentionResponse
+        fields = ("source", "response_to")
+
+
 class SentWebMentionForm(forms.ModelForm):
     class Meta:
         model = WebMentionResponse

@@ -2,9 +2,14 @@ import mf2py
 
 from django import template
 from django import forms
+from django.forms import modelformset_factory
 
 from ..models import WebMentionResponse
-from ..forms import WebMentionForm, SentWebMentionForm
+from ..forms import (
+    WebMentionForm,
+    SentWebMentionForm,
+    ProcessWebMentionResponseForm,
+)
 
 register = template.Library()
 
@@ -29,21 +34,39 @@ def send_webmention_form(context, absolute_url, content):
     request = context["request"]
     source = request.build_absolute_uri(absolute_url)
     mf2data = mf2py.parse(doc=content)
-    send_forms = []
+
+    queryset = WebMentionResponse.objects.filter(source=source)
 
     try:
         targets = mf2data["rels"]["webmention"]
     except KeyError:
         targets = []
 
-    for target in targets:
-        data = {"source": source, "response_to": target}
-        form = SentWebMentionForm(initial=data)
-        form.fields["source"] = forms.URLField(widget=forms.HiddenInput)
+    initial = [
+        {"source": source, "response_to": target}
+        for target in targets
+        if not queryset.filter(response_to=target).exists()
+    ]
 
-        send_forms.append(form)
+    WebMentionResponseFormSet = modelformset_factory(
+        WebMentionResponse,
+        form=ProcessWebMentionResponseForm,
+        extra=len(initial),
+    )
 
-    context["forms"] = send_forms
+    context["formset"] = WebMentionResponseFormSet(
+        initial=initial, queryset=queryset
+    )
+
+    context["webmentions"] = [
+        {
+            "target": target,
+            "webmention": WebMentionResponse.objects.filter(
+                source=source, response_to=target
+            ).first(),
+        }
+        for target in targets
+    ]
 
     return context
 
