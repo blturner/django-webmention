@@ -3,12 +3,11 @@ import requests
 import uuid
 
 from dateutil.parser import parse
-from urllib.parse import urljoin, urlparse
 
 from django.db import models
 from django.urls import reverse
 
-from bs4 import BeautifulSoup
+from .resolution import get_webmention_endpoint
 
 
 class WebMentionResponse(models.Model):
@@ -91,48 +90,8 @@ class WebMentionResponse(models.Model):
 
         return webmention
 
-    def get_webmention_endpoint(self):
-        target = self.response_to
-        endpoint = None
-        resp = requests.head(url=target)
-
-        if resp.links.get("webmention"):
-            endpoint = resp.links["webmention"]["url"]
-
-        if not endpoint:
-            for key in resp.links.keys():
-                if "webmention" in key.split():
-                    endpoint = resp.links.get(key)["url"]
-
-        if not endpoint:
-            resp = requests.get(url=target)
-
-            parsed_html = BeautifulSoup(resp.content, features="html5lib")
-
-            webmention = parsed_html.find_all(
-                ["link", "a"], attrs={"rel": "webmention"}
-            )
-
-            filtered = [
-                element for element in webmention if element.has_attr("href")
-            ]
-
-            endpoint = filtered[0].attrs.get("href") or target
-
-        if not endpoint:
-            raise forms.ValidationError(
-                "No webmention endpoint could be found for the target URL."
-            )
-
-        parsed_endpoint = urlparse(endpoint)
-
-        if not parsed_endpoint.netloc:
-            endpoint = urljoin(target, endpoint)
-
-        return endpoint
-
     def send_webmention(self):
-        url = self.get_webmention_endpoint()
+        url = get_webmention_endpoint(self.response_to)
 
         if not url:
             return

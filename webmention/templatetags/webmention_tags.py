@@ -1,15 +1,10 @@
 import mf2py
 
 from django import template
-from django import forms
 from django.forms import modelformset_factory
 
 from ..models import WebMentionResponse
-from ..forms import (
-    WebMentionForm,
-    SentWebMentionForm,
-    ProcessWebMentionResponseForm,
-)
+from ..forms import WebMentionForm, ProcessWebMentionResponseForm
 
 register = template.Library()
 
