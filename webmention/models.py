@@ -25,6 +25,7 @@ class WebMentionResponse(models.Model):
     status_code = models.CharField(max_length=3)
 
     class Meta:
+        unique_together = ["response_to", "source"]
         verbose_name = "webmention"
         verbose_name_plural = "webmentions"
 
