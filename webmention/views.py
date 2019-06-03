@@ -11,6 +11,8 @@ from django.forms import modelformset_factory
 from django.shortcuts import render
 from django.urls import reverse
 
+from sentry_sdk import capture_exception
+
 from .models import WebMentionResponse
 from .forms import WebMentionForm, ProcessWebMentionResponseForm
 from .resolution import (
@@ -49,6 +51,7 @@ def receive(request):
             webmention.invalidate()
             return HttpResponseBadRequest(str(e))
         except Exception as e:
+            capture_exception(e)
             return HttpResponseServerError(str(e))
     else:
         return HttpResponseBadRequest(
