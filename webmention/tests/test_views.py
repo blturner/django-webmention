@@ -137,3 +137,13 @@ class ReceiveTestCase(TestCase):
         )
         mock_url_resolves.assert_called_once_with(self.target, request=request)
         self.assertTrue(isinstance(response, HttpResponseServerError))
+
+    def test_receive_when_source_is_invalid(self):
+        source = "kaboom"
+        request = Mock()
+        request.method = "POST"
+        request.POST = {"source": source, "target": self.target}
+
+        response = receive(request)
+
+        self.assertTrue(isinstance(response, HttpResponseBadRequest))

@@ -27,6 +27,19 @@ logger = logging.getLogger(__name__)
 @require_POST
 def receive(request):
     if "source" in request.POST and "target" in request.POST:
+        form_data = {
+            "source": request.POST.get("source"),
+            "response_to": request.POST.get("target"),
+        }
+        form = WebMentionForm(form_data)
+
+        if not form.is_valid():
+            error_string = [
+                "{}: {}".format(key, form.errors.get(key)[0])
+                for key in form.errors.keys()
+            ]
+            return HttpResponseBadRequest("\n".join(error_string))
+
         source = request.POST.get("source")
         target = request.POST.get("target")
         webmention = None
