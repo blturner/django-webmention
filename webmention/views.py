@@ -1,3 +1,5 @@
+import logging
+
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from django.http import (
@@ -8,10 +10,6 @@ from django.http import (
 )
 from django.views.generic import CreateView, DetailView
 from django.forms import modelformset_factory
-from django.shortcuts import render
-from django.urls import reverse
-
-from sentry_sdk import capture_exception
 
 from .models import WebMentionResponse
 from .forms import WebMentionForm, ProcessWebMentionResponseForm
@@ -21,6 +19,8 @@ from .resolution import (
     SourceFetchError,
     TargetNotFoundError,
 )
+
+logger = logging.getLogger(__name__)
 
 
 @csrf_exempt
@@ -51,7 +51,7 @@ def receive(request):
             webmention.invalidate()
             return HttpResponseBadRequest(str(e))
         except Exception as e:
-            capture_exception(e)
+            logger.error(str(e))
             return HttpResponseServerError(str(e))
     else:
         return HttpResponseBadRequest(
