@@ -9,7 +9,9 @@ from ..forms import WebMentionForm, ProcessWebMentionResponseForm
 register = template.Library()
 
 
-@register.inclusion_tag("webmention/webmention_form.html", takes_context=True)
+@register.inclusion_tag(
+    "webmention/includes/webmention_form.html", takes_context=True
+)
 def webmention_form(context, obj):
     request = context["request"]
     target = obj.get_absolute_url()

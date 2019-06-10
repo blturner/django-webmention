@@ -42,10 +42,9 @@ class ResolutionTestCase(TestCase):
         )
         mock_get.return_value = mock_response
 
-        self.assertEqual(
-            mock_response.content,
-            fetch_and_validate_source(self.source, self.target),
-        )
+        resp = fetch_and_validate_source(self.source, self.target)
+
+        self.assertEqual(mock_response.content, resp.content)
 
     @patch("requests.get")
     def test_fetch_and_validate_source_when_source_unavailable(self, mock_get):
@@ -447,7 +446,7 @@ class ResolutionTestCase(TestCase):
             body="<html><link rel='webmention' href='/webmention?query=yes'></html>",
         )
 
-        expected = "{}/webmention".format(self.target)
+        expected = "{}/webmention?query=yes".format(self.target)
         endpoint = get_webmention_endpoint(self.target)
 
         self.assertEqual(endpoint, expected)

@@ -1,3 +1,5 @@
+import httpretty
+
 from unittest.mock import Mock, patch
 
 from django.test import TestCase
@@ -7,6 +9,7 @@ from django.http import (
     HttpResponseServerError,
 )
 
+from ..models import WebMentionResponse
 from ..views import receive
 from ..resolution import SourceFetchError, TargetNotFoundError
 
@@ -34,108 +37,112 @@ class ReceiveTestCase(TestCase):
 
         self.assertTrue(isinstance(response, HttpResponseBadRequest))
 
-    @patch("webmention.views.url_resolves")
-    def test_receive_when_target_does_not_resolve(self, mock_url_resolves):
+    @httpretty.activate
+    def test_receive_when_target_does_not_resolve(self):
+        httpretty.register_uri(httpretty.GET, self.target, status=404)
+        httpretty.register_uri(httpretty.GET, self.source, status=200)
+
         request = Mock()
         request.method = "POST"
         request.POST = {"source": self.source, "target": self.target}
 
-        mock_url_resolves.return_value = False
         response = receive(request)
 
-        mock_url_resolves.assert_called_once_with(self.target, request=request)
         self.assertTrue(isinstance(response, HttpResponseBadRequest))
+        self.assertEqual(
+            response.content.decode("utf-8"),
+            "Target URL did not resolve to a resource on the server",
+        )
 
-    @patch("webmention.views.WebMentionResponse.update")
-    @patch("webmention.views.fetch_and_validate_source")
-    @patch("webmention.views.url_resolves")
-    def test_receive_happy_path(
-        self, mock_url_resolves, mock_fetch_and_validate_source, mock_update
-    ):
+    @httpretty.activate
+    def test_receive_happy_path(self):
+        httpretty.register_uri(httpretty.GET, self.target, status=200)
+
+        body = '<a href="{}" rel="webmention">webmention</a>'.format(
+            self.target
+        )
+
+        httpretty.register_uri(
+            httpretty.GET, self.source, status=200, body=body
+        )
+
         request = Mock()
         request.method = "POST"
         request.POST = {"source": self.source, "target": self.target}
 
-        mock_url_resolves.return_value = True
-        mock_fetch_and_validate_source.return_value = "foo"
         response = receive(request)
 
-        mock_fetch_and_validate_source.assert_called_once_with(
-            self.source, self.target
-        )
-        mock_update.assert_called_once_with(
-            self.source,
-            self.target,
-            mock_fetch_and_validate_source.return_value,
-        )
-        mock_url_resolves.assert_called_once_with(self.target, request=request)
         self.assertTrue(isinstance(response, HttpResponse))
 
-    @patch("webmention.views.WebMentionResponse.invalidate")
-    @patch("webmention.views.fetch_and_validate_source")
-    @patch("webmention.views.url_resolves")
-    def test_receive_when_source_unavailable(
-        self,
-        mock_url_resolves,
-        mock_fetch_and_validate_source,
-        mock_invalidate,
-    ):
+        webmention = WebMentionResponse.objects.get(
+            source=self.source, response_to=self.target
+        )
+
+        self.assertEqual(webmention.status_code, "200")
+        self.assertEqual(webmention.response_body, body)
+
+    @httpretty.activate
+    def test_receive_when_source_unavailable(self,):
+        httpretty.register_uri(httpretty.GET, self.source, status=400)
+        httpretty.register_uri(httpretty.GET, self.target, status=200)
+
         request = Mock()
         request.method = "POST"
         request.POST = {"source": self.source, "target": self.target}
 
-        mock_url_resolves.return_value = True
-        mock_fetch_and_validate_source.side_effect = SourceFetchError
+        WebMentionResponse.objects.create(
+            source=self.source, response_to=self.target, current=True
+        )
+
         response = receive(request)
 
-        mock_fetch_and_validate_source.assert_called_once_with(
-            self.source, self.target
+        webmention = WebMentionResponse.objects.get(
+            source=self.source, response_to=self.target
         )
-        mock_url_resolves.assert_called_once_with(self.target, request=request)
-        self.assertEqual(1, mock_invalidate.call_count)
-        self.assertTrue(isinstance(response, HttpResponseBadRequest))
 
-    @patch("webmention.views.WebMentionResponse.invalidate")
-    @patch("webmention.views.fetch_and_validate_source")
-    @patch("webmention.views.url_resolves")
-    def test_receive_when_source_does_not_contain_target(
-        self,
-        mock_url_resolves,
-        mock_fetch_and_validate_source,
-        mock_invalidate,
-    ):
+        self.assertTrue(isinstance(response, HttpResponseBadRequest))
+        self.assertFalse(webmention.current)
+
+    @httpretty.activate
+    def test_receive_when_source_does_not_contain_target(self):
+        httpretty.register_uri(httpretty.GET, self.source, status=200)
+        httpretty.register_uri(httpretty.GET, self.target, status=200)
+
         request = Mock()
         request.method = "POST"
         request.POST = {"source": self.source, "target": self.target}
 
-        mock_url_resolves.return_value = True
-        mock_fetch_and_validate_source.side_effect = TargetNotFoundError
         response = receive(request)
 
-        mock_fetch_and_validate_source.assert_called_once_with(
-            self.source, self.target
-        )
-        mock_url_resolves.assert_called_once_with(self.target, request=request)
-        self.assertEqual(1, mock_invalidate.call_count)
         self.assertTrue(isinstance(response, HttpResponseBadRequest))
+        self.assertEqual(
+            response.content.decode("utf-8"),
+            "Source URL did not contain target URL",
+        )
 
     @patch("webmention.views.fetch_and_validate_source")
-    @patch("webmention.views.url_resolves")
+    @httpretty.activate
     def test_receive_when_general_exception_occurs(
-        self, mock_url_resolves, mock_fetch_and_validate_source
+        self, mock_fetch_and_validate_source
     ):
+        body = '<a href="{}" rel="webmention">webmention</a>'.format(
+            self.target
+        )
+        httpretty.register_uri(
+            httpretty.GET, self.source, status=200, body=body
+        )
+        httpretty.register_uri(httpretty.GET, self.target, status=200)
+
         request = Mock()
         request.method = "POST"
         request.POST = {"source": self.source, "target": self.target}
 
-        mock_url_resolves.return_value = True
         mock_fetch_and_validate_source.side_effect = Exception
         response = receive(request)
 
         mock_fetch_and_validate_source.assert_called_once_with(
             self.source, self.target
         )
-        mock_url_resolves.assert_called_once_with(self.target, request=request)
         self.assertTrue(isinstance(response, HttpResponseServerError))
 
     def test_receive_when_source_is_invalid(self):

@@ -90,6 +90,14 @@ class WebMentionResponse(models.Model):
 
         return webmention
 
+    def save(self, *args, **kwargs):
+        resp = requests.get(self.source)
+
+        self.status_code = resp.status_code
+        self.response_body = resp.content.decode("utf-8")
+
+        super().save(*args, **kwargs)
+
     def send_webmention(self):
         url = get_webmention_endpoint(self.response_to)
 

@@ -27,36 +27,31 @@ logger = logging.getLogger(__name__)
 @require_POST
 def receive(request):
     if "source" in request.POST and "target" in request.POST:
-        form_data = {
-            "source": request.POST.get("source"),
-            "response_to": request.POST.get("target"),
-        }
+        source = request.POST.get("source")
+        target = request.POST.get("target")
+
+        form_data = {"source": source, "response_to": target}
         form = WebMentionForm(form_data)
 
         if not form.is_valid():
             error_string = [
-                "{}: {}".format(key, form.errors.get(key)[0])
+                "{}".format(form.errors.get(key)[0])
                 for key in form.errors.keys()
             ]
-            return HttpResponseBadRequest("\n".join(error_string))
-
-        source = request.POST.get("source")
-        target = request.POST.get("target")
-        webmention = None
-
-        if not url_resolves(target, request=request):
-            return HttpResponseBadRequest(
-                "Target URL did not resolve to a resource on the server"
-            )
-
-        try:
             try:
                 webmention = WebMentionResponse.objects.get(
                     source=source, response_to=target
                 )
+                webmention.invalidate()
             except WebMentionResponse.DoesNotExist:
-                webmention = WebMentionResponse()
+                pass
+            return HttpResponseBadRequest("\n".join(error_string))
 
+        webmention, _ = WebMentionResponse.objects.get_or_create(
+            source=source, response_to=target
+        )
+
+        try:
             response = fetch_and_validate_source(source, target)
             webmention.update(source, target, response)
             return HttpResponse("The webmention was successfully received")
@@ -98,26 +93,37 @@ def process_webmentions(request):
     # )
 
 
+class WebmentionFormMixin(object):
+    form_class = WebMentionForm
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["form"] = self.form_class()
+        return context
+
+
 class WebmentionCreateView(CreateView):
     model = WebMentionResponse
     form_class = WebMentionForm
     template_name = "webmention/webmention_form.html"
 
-    def get_form_kwargs(self):
-        """
-        Sets the request on the form in order to use request.build_absolute_uri.
-        """
-        kwargs = super().get_form_kwargs()
-        kwargs.update({"request": self.request})
-        return kwargs
-
     def post(self, request, *args, **kwargs):
-        self.object = self.model.objects.get(
-            source=request.POST.get("source"),
-            response_to=request.POST.get("response_to"),
-        )
+        try:
+            self.object = self.model.objects.get(
+                source=request.POST.get("source"),
+                response_to=request.POST.get("response_to"),
+            )
+        except self.model.DoesNotExist:
+            self.object = None
 
-        return super().post(request, *args, **kwargs)
+        form = self.get_form()
+
+        if form.is_valid():
+            return self.form_valid(form)
+        else:
+            return self.form_invalid(form)
+
+        # return super().post(request, *args, **kwargs)
 
 
 class WebmentionStatus(DetailView):

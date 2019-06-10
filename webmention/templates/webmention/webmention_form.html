@@ -1,6 +1,3 @@
 <h1>Submit a webmention</h1>
-<form method="post" action="{% url 'webmention:submit' %}">
-  {% csrf_token %}
-  {{ form.as_p }}
-  <p><button type="submit">Submit</button></p>
-</form>
+
+{% include "webmention/includes/webmention_form.html" %}
