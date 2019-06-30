@@ -1,3 +1,4 @@
+import logging
 import mf2py
 
 from django import template
@@ -7,6 +8,8 @@ from ..models import WebMentionResponse
 from ..forms import WebMentionForm, ProcessWebMentionResponseForm
 
 register = template.Library()
+
+logger = logging.getLogger(__name__)
 
 
 @register.inclusion_tag(
@@ -28,42 +31,45 @@ def webmention_form(context, obj):
     "webmention/send_webmention_form.html", takes_context=True
 )
 def send_webmention_form(context, absolute_url, content):
-    request = context["request"]
-    source = request.build_absolute_uri(absolute_url)
-    mf2data = mf2py.parse(doc=content)
-
-    queryset = WebMentionResponse.objects.filter(source=source)
-
     try:
-        targets = mf2data["rels"]["webmention"]
-    except KeyError:
-        targets = []
+        request = context["request"]
+        source = request.build_absolute_uri(absolute_url)
+        mf2data = mf2py.parse(doc=content)
 
-    initial = [
-        {"source": source, "response_to": target}
-        for target in targets
-        if not queryset.filter(response_to=target).exists()
-    ]
+        queryset = WebMentionResponse.objects.filter(source=source)
 
-    WebMentionResponseFormSet = modelformset_factory(
-        WebMentionResponse,
-        form=ProcessWebMentionResponseForm,
-        extra=len(initial),
-    )
+        try:
+            targets = mf2data["rels"]["webmention"]
+        except KeyError:
+            targets = []
 
-    context["formset"] = WebMentionResponseFormSet(
-        initial=initial, queryset=queryset
-    )
+        initial = [
+            {"source": source, "response_to": target}
+            for target in targets
+            if not queryset.filter(response_to=target).exists()
+        ]
 
-    context["webmentions"] = [
-        {
-            "target": target,
-            "webmention": WebMentionResponse.objects.filter(
-                source=source, response_to=target
-            ).first(),
-        }
-        for target in targets
-    ]
+        WebMentionResponseFormSet = modelformset_factory(
+            WebMentionResponse,
+            form=ProcessWebMentionResponseForm,
+            extra=len(initial),
+        )
+
+        context["formset"] = WebMentionResponseFormSet(
+            initial=initial, queryset=queryset
+        )
+
+        context["webmentions"] = [
+            {
+                "target": target,
+                "webmention": WebMentionResponse.objects.filter(
+                    source=source, response_to=target
+                ).first(),
+            }
+            for target in targets
+        ]
+    except Exception as e:
+        logger.error(f"{e}")
 
     return context
 
